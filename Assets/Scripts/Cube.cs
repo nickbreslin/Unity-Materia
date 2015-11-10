@@ -100,7 +100,7 @@ public class Cube : MonoBehaviour {
 	
 	public void destroyDecay()
 	{
-		GetComponent<Renderer>().material.color -= new Color(.025f,.025f,.025f,0.05f);
+		GetComponent<Renderer>().material.color -= new Color(0,0,0,0.05f);
 	}
 	
 	public void explodeDecay()

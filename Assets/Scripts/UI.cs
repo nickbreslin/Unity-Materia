@@ -107,7 +107,7 @@ public class UI : MonoSingleton<UI>
 			}
 		}
 		GUI.color = Color.white;
-		if (GUI.Button (new Rect (5,5,150,20), "Toggle Instructions"))
+		if (GUI.Button (new Rect (5,5,160,20), "Toggle Instructions"))
 		{
 			Player.instance.hideHints = !Player.instance.hideHints;
 		}
