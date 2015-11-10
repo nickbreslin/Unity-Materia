@@ -12,7 +12,9 @@ public enum CubeState {
 	Stable,
 	Harvesting,
 	Depleted,
-	Exploded
+	Exploded,
+	Selected,
+	ExplodeAll
 }
 public class Cube : MonoBehaviour {
 	
@@ -40,24 +42,27 @@ public class Cube : MonoBehaviour {
 			return;
 		}
 		
-		if(state == CubeState.Harvesting)
-		{
-			GetComponent<Renderer>().material.color = Color.cyan;
-			state = CubeState.Stable;
-			Planet.instance.Combine (type);
-		}
+		//if(state == CubeState.Harvesting)
+		//{
+			//renderer.material.color = Color.cyan;
+		//	state = CubeState.Stable;
+		//	Planet.instance.Combine (type);
+		//}
 		
+		//  fade in place.
 		if(state == CubeState.Depleted)
 		{
 			destroyDecay();
 		}
 		
+		// fade and move away from origin
 		if( state == CubeState.Exploded)
 		{
 			t += Time.deltaTime;
 				explodeDecay();
 		}
 		
+		//clean up from decays.
 		if(GetComponent<Renderer>().material.color.a <= 0)
 		{
 			Planet.instance.Combine (type);	
@@ -81,6 +86,7 @@ public class Cube : MonoBehaviour {
 		if(hits == 0)
 		{
 			state = CubeState.Depleted;
+			//GetComponent<Renderer>().material.color = new Color(1,1,0,1f);
 			Depleted();
 		}
 		else{
@@ -94,13 +100,18 @@ public class Cube : MonoBehaviour {
 	
 	public void destroyDecay()
 	{
-		GetComponent<Renderer>().material.color -= new Color(1,0,1,0.05f);
+		GetComponent<Renderer>().material.color -= new Color(.025f,.025f,.025f,0.05f);
 	}
 	
 	public void explodeDecay()
 	{
-		transform.position = Vector3.Lerp (transform.position, transform.position * 2, t / 10);
-		GetComponent<Renderer>().material.color -= new Color(0,1,1,0.02f);
+		if(transform.position == Vector3.zero)
+		{
+			transform.position = new Vector3(0.1f, 0.1f, 0.1f);
+		}
+		
+		transform.position = Vector3.Lerp (transform.position, transform.position * 2, t / 30);
+		GetComponent<Renderer>().material.color -= new Color(0,1,1,0.001f);
 	}
 	
 	public void Depleted()
@@ -125,6 +136,31 @@ public class Cube : MonoBehaviour {
 		{
 			Player.instance.AdjustEnergy(25);
 		}
+	}
+
+	public void SetHover()
+	{
+		if(state != CubeState.Stable)
+		{
+			return;
+		}
+		state = CubeState.Selected;
+		Planet.instance.Combine (type);
+		GetComponent<Renderer>().enabled = true;
+		GetComponent<Renderer>().material.color = colorNormal * 2;
+		// most colorNormals have a 0.5f value, so this makes it brighter.
+	}
+
+	public void ClearHover()
+	{
+		if(state != CubeState.Selected)
+		{
+			return;
+		}
+		state = CubeState.Stable;
+		Planet.instance.Combine (type);
+		GetComponent<Renderer>().material.color = colorNormal;
+		GetComponent<Renderer>().enabled = false;
 	}
 	
 	public void Explode()

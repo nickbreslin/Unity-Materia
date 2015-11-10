@@ -1,22 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
-public class Game : MonoBehaviour {
-	
+public class Game : MonoSingleton<Game>
+{
 	public bool isActive;
 	public bool isReady;
-	public static Game instance;
-	void Awake()
-	{
-		if(Game.instance == null)
-		{
-			Game.instance = this;
-		}
-		else
-		{
-			DestroyImmediate(this);
-		}
-	}
 	
 	public void OnLevelWasLoaded()
 	{

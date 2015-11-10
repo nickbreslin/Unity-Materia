@@ -1,27 +1,20 @@
 using UnityEngine;
 using System.Collections;
 
-public class UI : MonoBehaviour
+public class UI : MonoSingleton<UI>
 {
+	public Texture barEmpty;
+	public Texture barGreen;
+	public Texture barBlue;
+	public Texture barRed;
 	public Font font;
-	public static UI instance;
 	string hover = "";
 	Color hoverColor = Color.white;
-	void Awake()
-	{
-		if(UI.instance == null)
-		{
-			UI.instance = this;
-		}
-		else
-		{
-			DestroyImmediate(this);
-		}
-	}
+	
 	void OnGUI()
 	{
 		GUI.skin.font = font;
-		
+
 		if(Application.loadedLevel == 1)
 		{
 			UIMenu();
@@ -41,9 +34,9 @@ public class UI : MonoBehaviour
 		}
 		GUI.color = Color.white;
 		
-		GUI.Label (new Rect(10,10, 300,200)	, "Welcome, Collector.\n\nWe are in dire need of materia for our development. Below are the four types of materia you can collect. When you're ready, please begin. Collect as much as you can without causing the materia to destabilize and explode.");
+		GUI.Label (new Rect(10,10, 600,200)	, "Welcome, Collector.\n\nWe are in dire need of materia for our development. Below are the four types of materia you can collect. When you're ready, please begin. Collect as much as you can without causing the materia to destabilize and explode.");
 		
-		GUILayout.BeginArea (new Rect(220, 125, Screen.width, 3000));
+		GUILayout.BeginArea (new Rect(220, 165, Screen.width, 3000));
 		GUILayout.BeginVertical ();
 		//GUILayout.FlexibleSpace ();
 		GUILayout.Label ("Common Materia");
@@ -143,6 +136,30 @@ public class UI : MonoBehaviour
 			GUILayout.Label ("Total Points: " + Player.instance.points.ToString ());
 			GetMode();
 		GUILayout.EndArea ();
+
+		//Energy
+		//new Rect(10,Screen.height-100,500, 100)
+		/*
+		GUI.DrawTexture(new Rect (200, 100, 206,28), barEmpty, ScaleMode.ScaleAndCrop);
+		Rect manaRect = new Rect(200, 100, 206, 28);
+		GUI.BeginGroup (manaRect);
+		GUI.DrawTexture(new Rect(0,0,206,28), barGreen, ScaleMode.ScaleAndCrop);  
+		GUI.EndGroup ();
+
+
+		GUI.DrawTexture(new Rect (200, 150, 206,28), barEmpty, ScaleMode.ScaleAndCrop);
+		 manaRect = new Rect(200, 150, 206, 28);
+		GUI.BeginGroup (manaRect);
+		GUI.DrawTexture(new Rect(0,0,206,28), barBlue, ScaleMode.ScaleAndCrop);   
+		GUI.EndGroup ();
+
+
+		GUI.DrawTexture(new Rect (200, 150, 206,28), barEmpty, ScaleMode.ScaleAndCrop);
+		manaRect = new Rect(200, 150, 206, 28);
+		GUI.BeginGroup (manaRect);
+		GUI.DrawTexture(new Rect(0,0,206,28), barRed, ScaleMode.ScaleAndCrop);   
+		GUI.EndGroup ();
+		*/
 	}
 	
 	public void SetHover(Cube cube)
@@ -162,6 +179,7 @@ public class UI : MonoBehaviour
 	}
 	public void ClearHover() {
 		hover = "";
+
 	}
 	
 	public void GetMode()
@@ -227,7 +245,7 @@ public class UI : MonoBehaviour
 		}
 		for(int i=0;i<10-v;i++)
 		{
-			s += "-";
+			s += "_";
 		}
 		GUILayout.Label (s);
 		
@@ -270,7 +288,7 @@ public class UI : MonoBehaviour
 		}
 		for(int i=0;i<10-v;i++)
 		{
-			s += "-";
+			s += "_";
 		}
 		GUILayout.Label (s);
 		
@@ -282,6 +300,20 @@ public class UI : MonoBehaviour
 		GUILayout.Label (")");
 		GUILayout.FlexibleSpace();
 		GUILayout.EndHorizontal();
+	}
+	
+	
+	static public void DrawLabel (Rect rect, string value, Color color, int padding = 1)
+	{
+		GUIStyle style = GUI.skin.label;
+		style.alignment = TextAnchor.MiddleCenter;
+		
+//		Rect r = new Rect (rect.x + padding, rect.y + padding, rect.width, rect.height);
+		
+		//GUI.color = color - new Color(0.5f,0.5f,0.5f, 0f);
+		//GUI.Label (r, value, style);
+		GUI.color = color;
+		GUI.Label (rect, value, style);
 	}
 }
 

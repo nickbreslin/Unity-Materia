@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Planet : MonoBehaviour
+public class Planet : MonoSingleton<Planet>
 {
 	public GameObject prefabCore;
 	public GameObject prefabDefault;
@@ -19,6 +19,10 @@ public class Planet : MonoBehaviour
 	
 	public int volatility = 100;
 	
+	public float delay = 0;
+	
+	public int size = 0;
+	
 	public void AdjustVolatility(int amount)
 	{
 		volatility = Mathf.Clamp (volatility + amount, 0, 100);
@@ -30,25 +34,17 @@ public class Planet : MonoBehaviour
 		}
 	}
 	
-	public static Planet instance;
-	void Awake()
-	{
-		if(Planet.instance == null)
-		{
-			Planet.instance = this;
-		}
-		else
-		{
-			DestroyImmediate(this);
-		}
-	}
 
 	void Start ()
-	{	
-		int n = Mathf.RoundToInt(100 * (1 + (float)Player.instance.level * (float)Player.instance.level * 0.1f));
+	{			
+		if(size == 0)
+		{
+			size = Mathf.RoundToInt(100 * (1 + (float)Player.instance.level * (float)Player.instance.level * 0.1f));
+		}
+		
 		int c = 10;
 		int v = Mathf.Clamp(12 - Player.instance.level * 2, 2, 10);
-		StartCoroutine (Build(n, c, v));
+		StartCoroutine (Build(size, c, v));
 	}
 	/*
 	IEnumerator Build(List<Vector3> vectors)
@@ -90,18 +86,22 @@ public class Planet : MonoBehaviour
 				
 			}
 		}
-		GameObject go = Instantiate(prefab, node.position, Quaternion.identity) as GameObject;
+		GameObject go = Instantiate(prefab, node.position, Quaternion.identity/*transform.rotation*/) as GameObject;
 		go.transform.parent = transform;
 		node.cube = go.GetComponent<Cube>();
-		//Combine (node.cube.type);
+		Combine (node.cube.type);
 
 		if(remaining > 0)
 		{
-			yield return new WaitForSeconds(0.01f);
-			yield return StartCoroutine(Build (remaining-1, chanceC, chanceV))	;
+			yield return new WaitForSeconds(delay);
+			yield return StartCoroutine(Build (remaining-1, chanceC, chanceV));
 		}
 		else
 		{
+			Combine (CubeType.Common);
+			Combine (CubeType.Condensed);
+			Combine (CubeType.Core);
+			Combine (CubeType.Volatile);
 			Game.instance.isReady = true;
 		}
 	}
@@ -144,60 +144,65 @@ public class Planet : MonoBehaviour
 	
 
     public void Combine(CubeType type) {
-
 		GameObject[] gos = GameObject.FindGameObjectsWithTag("Cube");
-		MeshFilter[] meshFilters = new MeshFilter[gos.Length];
+		List <MeshFilter> meshFilters = new List<MeshFilter>();
+
 		for(int x=0; x < gos.Length;x++)
 		{
 			Cube cube = gos[x].GetComponent<Cube>();
 			if(cube.state == CubeState.Stable && cube.type == type)
 			{
-				meshFilters[x] = gos[x].GetComponent<MeshFilter>();
+				meshFilters.Add(gos[x].GetComponent<MeshFilter>());
 			}
 		}
 
-		CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+		CombineInstance[] combine = new CombineInstance[meshFilters.Count];
         int i = 0;
-        while (i < meshFilters.Length) {
+        while (i < meshFilters.Count) {
 			if(meshFilters[i] != null)
 			{
-            combine[i].mesh = meshFilters[i].sharedMesh;
-            combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
-            meshFilters[i].gameObject.GetComponent<Renderer>().enabled = false;
+            	combine[i].mesh = meshFilters[i].sharedMesh;
+            	combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
+            	meshFilters[i].gameObject.GetComponent<Renderer>().enabled = false;
 			}
             i++;
             
         }
+
 		if(type == CubeType.Common)
 		{
         	combinedCommon.GetComponent<MeshFilter>().mesh = new Mesh();
         	combinedCommon.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
-        	combinedCommon.gameObject.active = true;
+			combinedCommon.transform.rotation = Quaternion.identity;
+        	//combinedCommon.gameObject.SetActive(true);
 		}
+
 		if(type == CubeType.Condensed)
 		{
         	combinedCondensed.GetComponent<MeshFilter>().mesh = new Mesh();
         	combinedCondensed.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
-        	combinedCondensed.gameObject.active = true;
+			combinedCondensed.transform.rotation = Quaternion.identity;
+        	//combinedCondensed.gameObject.SetActive(true);
 		}
 		if(type == CubeType.Volatile)
 		{
         	combinedVolatile.GetComponent<MeshFilter>().mesh = new Mesh();
         	combinedVolatile.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
-        	combinedVolatile.gameObject.active = true;
+			combinedVolatile.transform.rotation = Quaternion.identity;
+        	//combinedVolatile.gameObject.SetActive(true);
 		}
 		if(type == CubeType.Core)
 		{
         	combinedCore.GetComponent<MeshFilter>().mesh = new Mesh();
         	combinedCore.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
-        	combinedCore.gameObject.active = true;
+			combinedCore.transform.rotation = Quaternion.identity;
+        	//combinedCore.gameObject.SetActive(true);
 		}
-        
+
     }
 	
 	static public void Explode()
 	{
-		
 		foreach(Node node in Planet.instance.nodes)
 		{
 			if(node.cube)
@@ -205,6 +210,40 @@ public class Planet : MonoBehaviour
 				node.cube.Explode();
 			}
 		}
+	 }
+	
+	public IEnumerator LocalExplode(float t)
+	{
+		foreach(Node node in nodes)
+		{
+			if(node.cube)
+			{
+				//node.cube.
+				if(node.cube.transform.position == Vector3.zero)
+				{
+					node.cube.transform.position = new Vector3(0.1f, 0.1f, 0.1f);
+				}
+				
+				node.cube.transform.position = Vector3.Lerp (node.cube.transform.position, node.cube.transform.position * 2, t / 30);
+				DestroyImmediate(node.cube.GetComponent<Collider>());
+			}
+		}
+		
+		combinedCommon.GetComponent<Renderer>().material.color -= new Color(0,1,1,0.001f);
+		combinedVolatile.GetComponent<Renderer>().material.color -= new Color(0,1,1,0.001f);
+		combinedCore.GetComponent<Renderer>().material.color -= new Color(0,1,1,0.001f);
+		combinedCondensed.GetComponent<Renderer>().material.color -= new Color(0,1,1,0.001f);
+		
+		Combine (CubeType.Common);
+		Combine (CubeType.Condensed);
+		Combine (CubeType.Core);
+		Combine (CubeType.Volatile);
+	 
+		t += Time.deltaTime;
+		
+		yield return 0;
+		
+		StartCoroutine (LocalExplode(t));
 	}
 }
 
@@ -214,4 +253,3 @@ public class Node
 	public float distance;
 	public Cube cube;
 }
-

@@ -1,32 +1,20 @@
 using UnityEngine;
 using System.Collections;
 
-public class Player : MonoBehaviour
+public class Player : MonoSingleton<Player>
 {
 	public ClickMode mode = ClickMode.Single;
 	public int energy;
 	public int maxEnergy;
-	public static Player instance;
 	public int level = 1;
 	public int points = 0;
+	public int regenRate = 1;
 	public bool hideHints = false;
-	
-	void Awake()
-	{
-		if(Player.instance == null)
-		{
-			Player.instance = this;
-		}
-		else
-		{
-			DestroyImmediate(this);
-		}
-	}
+
 	
 	void Start()
 	{
-		
-				StartCoroutine (Regen());
+		StartCoroutine (Regen());
 	}
 	
 	void Update()
@@ -41,6 +29,7 @@ public class Player : MonoBehaviour
 	{
 		if(l == 1)
 		{
+			//resets level.
 			points = 0;
 			level = 1;
 		}
@@ -51,7 +40,7 @@ public class Player : MonoBehaviour
 	IEnumerator Regen()
 	{
 		yield return new WaitForSeconds(1);
-		AdjustEnergy (1);
+		AdjustEnergy (regenRate);
 		yield return StartCoroutine (Regen());
 	}
 	
